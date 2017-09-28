@@ -7,31 +7,25 @@ class ESP3Packet {
         const dataOffset = 6;
 
         const raw = buffer;
-        this.raw = raw;
 
         // Sync Byte - Every ESP3 packet starts with 55
         const syncByte = raw.toString('hex', 0, 1); // Size = 1 Byte
-        this.syncByte = syncByte;
 
         const rawHeader = raw.slice(1, 5); // Header size = 4
-        this.rawHeader = rawHeader;
 
         const header = {
             dataLength: rawHeader.readUInt16BE(0), // Size = 2 bytes
             optionalLength: rawHeader.readUInt8(2), // Size = 1 byte
             packetType: rawHeader.toString('hex', 3, 4) // Size = 1 byte
         }
-        this.header = header;
 
-        const crc8h = raw.toString('hex', 4, 5); // Size = 1 byte
-        this.crc8h = crc8h;
+        const crc8h = raw.toString('hex', 5, 6); // Size = 1 byte
 
         if (parseInt(crc8h, 16) !== crc8(rawHeader)) {
-            return null;
+            return;
         }
 
         const rawData = raw.slice(dataOffset, dataOffset + header.dataLength); // Keep buffer reference
-        this.rawData = rawData;
 
         const data = {
             rorg: rawData.toString('hex', 0, 1), // Size = 1 byte
@@ -39,10 +33,8 @@ class ESP3Packet {
             senderId: rawData.toString('hex', header.dataLength - 5, header.dataLength - 1), // Size = 4 bytes
             status: rawData.toString('hex', header.dataLength - 1, header.dataLength), // Size = 1 byte
         }
-        this.data = data;
 
         const rawOptionalData = raw.slice(dataOffset + header.dataLength, dataOffset + header.dataLength + header.optionalLength); // Keep buffer reference
-        this.rawOptionalData = rawOptionalData;
 
         const optionalData = {
             subTelNum: rawOptionalData.readUInt8(0), // Size = 1 byte
@@ -50,14 +42,23 @@ class ESP3Packet {
             dBm: rawOptionalData.readUInt8(5), // Size = 1 byte
             securityLevel: rawOptionalData.readUInt8(6), // Size = 1 byte
         }
-        this.optionalData = optionalData;
 
         const crc8d = raw.toString('hex', dataOffset + header.dataLength + header.optionalLength, dataOffset + header.dataLength + header.optionalLength + 1); // Size = 1 byte
-        this.crc8d = crc8d;
 
         if (parseInt(crc8d, 16) !== crc8(Buffer.concat([rawData, rawOptionalData]))) {
             return null;
         }
+
+        this.raw = raw;
+        this.syncByte = syncByte;
+        this.rawHeader = rawHeader;
+        this.header = header;
+        this.crc8h = crc8h;
+        this.rawData = rawData;
+        this.data = data;
+        this.rawOptionalData = rawOptionalData;
+        this.optionalData = optionalData;
+        this.crc8d = crc8d;
     }
 }
 
