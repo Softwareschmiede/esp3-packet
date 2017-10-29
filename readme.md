@@ -1,6 +1,6 @@
 # esp3-packet
-This module parses a vaild esp3 buffer to an esp3 packet.
-It splits all information out of the buffer, except of the "user data".
+This module parses vaild esp3 buffer to esp3 packetes.
+It extracts all information out of the buffer, except of the "user data".
 Therefore you need to know the EEP.
 
 ## Usage
@@ -11,24 +11,31 @@ const packet = new ESP3Packet(buffer);
 ```
 
 ## Packet structure
-	raw
-	syncByte
-	rawHeader
-	header
-		dataLength
-		optionalLength
-		packetType
-	crc8h
-	rawData
-	data
-		rorg
-		userData
-		senderId
-		status
-	rawOptionalData
-	optionalData
-		subTelNum
-		destinationId
-		dBm
-		securityLevel
-	crc8d
+```javascript
+{
+    raw: Buffer,
+    syncByte: '55',
+    rawHeader: Buffer,
+    header: {
+        dataLength: Number,
+        optionalLength: Number,
+        packetType: String
+    },
+    crc8h: String,
+    rawData: Buffer,
+    data: {
+        rorg: String,
+        userData: Buffer,
+        senderId: String,
+        status: String
+    },
+    rawOptionalData: Buffer,
+    optionalData: {
+        subTelNum: Number,
+        destinationId: String,
+        dBm: Number,
+        securityLevel: Number
+    },
+    crc8d: String
+}
+  ```

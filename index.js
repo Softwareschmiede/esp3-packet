@@ -1,7 +1,7 @@
 class ESP3Packet {
     constructor(buffer) {
         if (buffer === undefined || buffer === null) {
-            return null;
+            throw new TypeError('Buffer is missing.');
         }
 
         const dataOffset = 6;
@@ -17,13 +17,13 @@ class ESP3Packet {
             dataLength: rawHeader.readUInt16BE(0), // Size = 2 bytes
             optionalLength: rawHeader.readUInt8(2), // Size = 1 byte
             packetType: rawHeader.toString('hex', 3, 4) // Size = 1 byte
-        }
+        };
 
         const crc8h = raw.toString('hex', 5, 6); // Size = 1 byte
 
-        if (parseInt(crc8h, 16) !== crc8(rawHeader)) {
-            return;
-        }
+        //if (parseInt(crc8h, 16) !== crc8(rawHeader)) {
+        //    return;
+        //}
 
         const rawData = raw.slice(dataOffset, dataOffset + header.dataLength); // Keep buffer reference
 
@@ -31,8 +31,8 @@ class ESP3Packet {
             rorg: rawData.toString('hex', 0, 1), // Size = 1 byte
             userData: rawData.slice(1, header.dataLength - 5), // Variable length, but sender id and status have fixed sizes
             senderId: rawData.toString('hex', header.dataLength - 5, header.dataLength - 1), // Size = 4 bytes
-            status: rawData.toString('hex', header.dataLength - 1, header.dataLength), // Size = 1 byte
-        }
+            status: rawData.toString('hex', header.dataLength - 1, header.dataLength) // Size = 1 byte
+        };
 
         const rawOptionalData = raw.slice(dataOffset + header.dataLength, dataOffset + header.dataLength + header.optionalLength); // Keep buffer reference
 
@@ -40,14 +40,14 @@ class ESP3Packet {
             subTelNum: rawOptionalData.readUInt8(0), // Size = 1 byte
             destinationId: rawOptionalData.toString('hex', 1, 5), // Size = 4 bytes
             dBm: rawOptionalData.readUInt8(5), // Size = 1 byte
-            securityLevel: rawOptionalData.readUInt8(6), // Size = 1 byte
-        }
+            securityLevel: rawOptionalData.readUInt8(6) // Size = 1 byte
+        };
 
         const crc8d = raw.toString('hex', dataOffset + header.dataLength + header.optionalLength, dataOffset + header.dataLength + header.optionalLength + 1); // Size = 1 byte
 
-        if (parseInt(crc8d, 16) !== crc8(Buffer.concat([rawData, rawOptionalData]))) {
-            return null;
-        }
+        //if (parseInt(crc8d, 16) !== crc8(Buffer.concat([rawData, rawOptionalData]))) {
+        //    throw new Error('Buffer is missing.');
+        //}
 
         this.raw = raw;
         this.syncByte = syncByte;
