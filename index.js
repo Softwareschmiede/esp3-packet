@@ -1,3 +1,5 @@
+const Telegram = require('./telegram');
+
 class ESP3Packet {
     constructor(buffer) {
         if (buffer === undefined || buffer === null) {
@@ -29,10 +31,16 @@ class ESP3Packet {
 
         const data = {
             rorg: rawData.toString('hex', 0, 1), // Size = 1 byte
-            userData: rawData.slice(1, header.dataLength - 5), // Variable length, but sender id and status have fixed sizes
+            rawUserData: rawData.slice(1, header.dataLength - 5), // Variable length, but sender id and status have fixed sizes
             senderId: rawData.toString('hex', header.dataLength - 5, header.dataLength - 1), // Size = 4 bytes
             status: rawData.toString('hex', header.dataLength - 1, header.dataLength) // Size = 1 byte
         };
+
+        const userData = Telegram(data);
+
+        if (userData) {
+            data.userData = userData;
+        }
 
         const rawOptionalData = raw.slice(dataOffset + header.dataLength, dataOffset + header.dataLength + header.optionalLength); // Keep buffer reference
 
