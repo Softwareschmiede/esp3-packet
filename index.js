@@ -1,19 +1,20 @@
 const Telegram = require('./telegram');
 
 class ESP3Packet {
-    constructor(buffer) {
+    constructor(buffer, output) {
         if (buffer === undefined || buffer === null) {
             throw new TypeError('Buffer is missing.');
         }
 
-        const dataOffset = 6;
+        // Set output mode
+        const output = (output === undefined || output === null) ? 'simple' : 'advanced';
 
-        const raw = buffer;
+        const dataOffset = 6; // Header has a length of 5 bytes + 1 byte crc8 checksum
 
         // Sync Byte - Every ESP3 packet starts with 55
-        const syncByte = raw.toString('hex', 0, 1); // Size = 1 Byte
+        const syncByte = buffer.toString('hex', 0, 1); // Size = 1 Byte
 
-        const rawHeader = raw.slice(1, 5); // Header size = 4
+        const rawHeader = buffer.slice(1, 5); // Header size = 4
 
         const header = {
             dataLength: rawHeader.readUInt16BE(0), // Size = 2 bytes
@@ -21,13 +22,13 @@ class ESP3Packet {
             packetType: rawHeader.toString('hex', 3, 4) // Size = 1 byte
         };
 
-        const crc8h = raw.toString('hex', 5, 6); // Size = 1 byte
+        const crc8h = buffer.toString('hex', 5, 6); // Size = 1 byte
 
-        //if (parseInt(crc8h, 16) !== crc8(rawHeader)) {
-        //    return;
-        //}
+        if (parseInt(crc8h, 16) !== crc8(rawHeader)) {
+            throw new Error('CRC8 checksum of header doesn`t match.');
+        }
 
-        const rawData = raw.slice(dataOffset, dataOffset + header.dataLength); // Keep buffer reference
+        const rawData = buffer.slice(dataOffset, dataOffset + header.dataLength); // Keep buffer reference
 
         const data = {
             rorg: rawData.toString('hex', 0, 1), // Size = 1 byte
@@ -42,7 +43,7 @@ class ESP3Packet {
             data.userData = userData;
         }
 
-        const rawOptionalData = raw.slice(dataOffset + header.dataLength, dataOffset + header.dataLength + header.optionalLength); // Keep buffer reference
+        const rawOptionalData = buffer.slice(dataOffset + header.dataLength, dataOffset + header.dataLength + header.optionalLength); // Keep buffer reference
 
         const optionalData = {
             subTelNum: rawOptionalData.readUInt8(0), // Size = 1 byte
@@ -51,22 +52,32 @@ class ESP3Packet {
             securityLevel: rawOptionalData.readUInt8(6) // Size = 1 byte
         };
 
-        const crc8d = raw.toString('hex', dataOffset + header.dataLength + header.optionalLength, dataOffset + header.dataLength + header.optionalLength + 1); // Size = 1 byte
+        const crc8d = buffer.toString('hex', dataOffset + header.dataLength + header.optionalLength, dataOffset + header.dataLength + header.optionalLength + 1); // Size = 1 byte
 
-        //if (parseInt(crc8d, 16) !== crc8(Buffer.concat([rawData, rawOptionalData]))) {
-        //    throw new Error('Buffer is missing.');
-        //}
+        if (parseInt(crc8d, 16) !== crc8(Buffer.concat([rawData, rawOptionalData]))) {
+            throw new Error('CRC8 checksum of data doesn`t match.');
+        }
 
-        this.raw = raw;
-        this.syncByte = syncByte;
-        this.rawHeader = rawHeader;
-        this.header = header;
-        this.crc8h = crc8h;
-        this.rawData = rawData;
-        this.data = data;
-        this.rawOptionalData = rawOptionalData;
-        this.optionalData = optionalData;
-        this.crc8d = crc8d;
+        if (output === 'simple') {
+            return {
+                header: header,
+                data: data,
+                optionalData: optionalData
+            }
+        } else {
+            return {
+                raw: buffer,
+                syncByte: syncByte,
+                rawHeader: rawHeader,
+                header: header,
+                crc8h: crc8h,
+                rawData: rawData,
+                data: data,
+                rawOptionalData: rawOptionalData,
+                optionalData: optionalData,
+                crc8d: crc8d
+            }
+        }
     }
 }
 
