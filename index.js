@@ -1,5 +1,3 @@
-const Telegram = require('./telegram');
-
 class ESP3Packet {
     constructor(buffer, output) {
         if (buffer === undefined || buffer === null) {
@@ -7,7 +5,7 @@ class ESP3Packet {
         }
 
         // Set output mode
-        const output = (output === undefined || output === null) ? 'simple' : 'advanced';
+        const mode = (output === undefined || output === null) ? 'simple' : 'advanced';
 
         const dataOffset = 6; // Header has a length of 5 bytes + 1 byte crc8 checksum
 
@@ -37,12 +35,6 @@ class ESP3Packet {
             status: rawData.toString('hex', header.dataLength - 1, header.dataLength) // Size = 1 byte
         };
 
-        const userData = Telegram(data);
-
-        if (userData) {
-            data.userData = userData;
-        }
-
         const rawOptionalData = buffer.slice(dataOffset + header.dataLength, dataOffset + header.dataLength + header.optionalLength); // Keep buffer reference
 
         const optionalData = {
@@ -58,7 +50,7 @@ class ESP3Packet {
             throw new Error('CRC8 checksum of data doesn`t match.');
         }
 
-        if (output === 'simple') {
+        if (mode === 'simple') {
             return {
                 header: header,
                 data: data,
