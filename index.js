@@ -52,7 +52,6 @@ class ESP3Packet {
 
         if (mode === 'simple') {
             return {
-                header: header,
                 data: data,
                 optionalData: optionalData
             }

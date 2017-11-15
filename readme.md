@@ -22,11 +22,6 @@ const packet = new ESP3Packet(buffer, 'advanced'); // simple or advanced
 Simple output mode:
 ```javascript
 {
-    header: {
-        dataLength: Number,
-        optionalLength: Number,
-        packetType: String
-    },
     data: {
         rorg: String,
         userData: Buffer,
