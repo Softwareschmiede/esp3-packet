@@ -6,20 +6,36 @@ It extracts all information out of the buffer, except of the "user data".
 ```javascript
 const ESP3Packet = require('esp3-packet');
 ...
-const packet = new ESP3Packet(buffer);
+const espPacket = new ESP3Packet();
+const packet = espPacket.parse(buffer);
 ```
 
-## Option
-You can set a 'simple' or 'advanced' output mode.
-Default is simple mode.
-
+## Constructor
 ```javascript
-const packet = new ESP3Packet(buffer, 'advanced'); // simple or advanced
+new ESP3Packet(true); // Extended output enabled
+new ESP3Packet(false); // Extended output disabled (default)
 ```
+
+## Methods
+### setExtendedOutput(boolean)
+* `boolean` **<Boolean>** A boolean for enable or disable the extended output.
+```javascript
+espPacket.setExtendedOutput(true); // Extended output enabled
+espPacket.setExtendedOutput(false); // Extended output disabled (default)
+```
+Enables or disables the extended output.
+
+### parse(buffer)
+* `buffer` **<Buffer>** A buffer object
+```javascript
+console.log(espPacket.parse(buffer));
+```
+Returns a parsed packet or `null` if the buffer isn't vaild.
+A `TypeError` will be thrown if the buffer isn't set.
 
 
 ## Packet structure
-Simple output mode:
+Default output:
 ```javascript
 {
     data: {
@@ -37,7 +53,7 @@ Simple output mode:
 }
   ```
 
-Advanced output mode:
+Extended output:
 ```javascript
 {
     raw: Buffer,

@@ -1,11 +1,26 @@
-class ESP3Packet {
-    constructor(buffer, output) {
-        if (buffer === undefined || buffer === null) {
-            throw new TypeError('Buffer is missing.');
-        }
+'use strict';
 
-        // Set output mode
-        const mode = (output === undefined || output === null) ? 'simple' : 'advanced';
+/*
+ *  Private declarations
+ */
+let _extendedOutput = false;
+
+/*
+ *  Class
+ */
+class ESP3Packet {
+    constructor(extendedOutput) {
+        _extendedOutput = extendedOutput ? extendedOutput : false;
+    }
+
+    setExtendedOutput(extendedOutput) {
+        _extendedOutput = extendedOutput;
+    }
+
+    parse(buffer) {
+        if (buffer === undefined || buffer === null) {
+            throw new TypeError('Buffer is missing');
+        }
 
         const dataOffset = 6; // Header has a length of 5 bytes + 1 byte crc8 checksum
 
@@ -23,7 +38,8 @@ class ESP3Packet {
         const crc8h = buffer.toString('hex', 5, 6); // Size = 1 byte
 
         if (parseInt(crc8h, 16) !== crc8(rawHeader)) {
-            throw new Error('CRC8 checksum of header doesn`t match.');
+            // throw new Error('CRC8 checksum of header doesn`t match.');
+            return null;
         }
 
         const rawData = buffer.slice(dataOffset, dataOffset + header.dataLength); // Keep buffer reference
@@ -47,10 +63,11 @@ class ESP3Packet {
         const crc8d = buffer.toString('hex', dataOffset + header.dataLength + header.optionalLength, dataOffset + header.dataLength + header.optionalLength + 1); // Size = 1 byte
 
         if (parseInt(crc8d, 16) !== crc8(Buffer.concat([rawData, rawOptionalData]))) {
-            throw new Error('CRC8 checksum of data doesn`t match.');
+            // throw new Error('CRC8 checksum of data doesn`t match.');
+            return null;
         }
 
-        if (mode === 'simple') {
+        if (!_extendedOutput) {
             return {
                 data: data,
                 optionalData: optionalData

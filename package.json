@@ -1,6 +1,6 @@
 {
   "name": "esp3-packet",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Parses an EnOcean Serial Protocol 3 buffer to an ESP3 packet.",
   "main": "index.js",
   "scripts": {
